@@ -1,0 +1,245 @@
+import { useState } from "react";
+import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail, Star } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import Logo from "../../components/common/Logo";
+import { useAuth } from "../../context/AuthContext";
+
+const ROW_ONE = [
+  ["Green Basket Market", "4.8"],
+  ["Urban Threads", "4.6"],
+  ["Daily Brew Cafe", "4.9"],
+  ["Pixel & Print", "4.4"],
+  ["Fresh Mart", "4.7"],
+  ["Book Nook", "4.5"],
+];
+
+const ROW_TWO = [
+  ["Sunrise Bakery", "4.9"],
+  ["Home Hardware Co.", "4.3"],
+  ["The Pet Place", "4.8"],
+  ["Orbit Electronics", "4.5"],
+  ["Leaf & Petal", "4.7"],
+  ["City Pharmacy", "4.6"],
+];
+
+const field =
+  "peer w-full rounded-2xl border border-white/10 bg-white/[0.06] py-3.5 pl-11 pr-4 text-[15px] text-white placeholder:text-indigo-300/50 transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus:border-amber-300/70 focus:bg-white/10 focus:outline-none focus:ring-4 focus:ring-amber-300/10";
+
+const fieldIcon =
+  "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300/60 transition-colors duration-200 peer-focus:text-amber-300";
+
+function MarqueeRow({ items, reverse = false, className = "" }) {
+  const loop = [...items, ...items];
+
+  return (
+    <div className={`flex w-max gap-4 ${className}`}>
+      <div className={`glow-marquee flex shrink-0 gap-4 ${reverse ? "glow-marquee-reverse" : ""}`}>
+        {loop.map(([name, score], index) => (
+          <div
+            key={`${name}-${index}`}
+            className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.05] px-5 py-3 text-sm text-indigo-100/80"
+          >
+            <span className="font-medium">{name}</span>
+            <span className="flex items-center gap-1 font-semibold text-amber-300">
+              <Star size={13} className="fill-current" />
+              {score}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function Login() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  const successMessage = location.state?.message || "";
+
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (error) setError("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setError("");
+    setLoading(true);
+
+    try {
+      const data = await login(form);
+      const role = data.user?.role;
+      sessionStorage.removeItem("lastProtectedPath");
+
+      if (role === "ADMIN") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (role === "USER") {
+        navigate("/stores", { replace: true });
+      } else if (role === "STORE_OWNER") {
+        navigate("/owner/dashboard", { replace: true });
+      } else {
+        setError("Invalid user role assigned to this account.");
+      }
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          "Unable to sign in. Please check your credentials and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-950 via-violet-950 to-fuchsia-950 px-5 py-12 selection:bg-amber-300 selection:text-indigo-950"
+      style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" }}
+    >
+      <style>{`
+        @keyframes glow-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .glow-marquee { animation: glow-scroll 60s linear infinite; }
+        .glow-marquee-reverse { animation-direction: reverse; animation-duration: 75s; }
+        @media (prefers-reduced-motion: reduce) { .glow-marquee { animation: none; } }
+      `}</style>
+
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-violet-600/40 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 translate-x-1/4 translate-y-1/4 rounded-full bg-amber-400/20 blur-3xl" />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 flex -rotate-6 scale-125 flex-col justify-center gap-5 opacity-70"
+      >
+        <MarqueeRow items={ROW_ONE} />
+        <MarqueeRow items={ROW_TWO} reverse className="-ml-40" />
+        <MarqueeRow items={ROW_ONE} className="-ml-16" />
+        <MarqueeRow items={ROW_TWO} reverse className="-ml-64" />
+        <MarqueeRow items={ROW_ONE} className="-ml-24" />
+      </div>
+
+      <main className="relative w-full max-w-md">
+        <div className="rounded-[28px] border border-white/15 bg-indigo-950/60 p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:p-10">
+          <div className="flex justify-center">
+            <Logo variant="dark" />
+          </div>
+
+          <h1 className="mt-8 text-center text-3xl font-bold tracking-tight text-white">Welcome back</h1>
+          <p className="mt-2 text-center text-[15px] text-indigo-200">Sign in to see how your stores are rated.</p>
+
+          <div className="mt-6 space-y-3">
+            {successMessage && (
+              <div
+                role="status"
+                className="flex items-start gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-200"
+              >
+                <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-300" />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
+            {error && (
+              <div
+                role="alert"
+                className="flex items-start gap-3 rounded-2xl border border-red-400/40 bg-red-500/10 p-4 text-sm text-red-200"
+              >
+                <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-300" />
+                <span>{error}</span>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+            <div>
+              <label htmlFor="email" className="mb-2 block text-sm font-medium text-indigo-100">
+                Email
+              </label>
+              <div className="relative">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  className={field}
+                />
+                <Mail size={18} className={fieldIcon} />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="mb-2 block text-sm font-medium text-indigo-100">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  value={form.password}
+                  onChange={handleChange}
+                  className={`${field} pr-12`}
+                />
+                <Lock size={18} className={fieldIcon} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-xl p-2 text-indigo-300/60 transition-colors duration-200 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/20"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-5 py-3.5 text-[15px] font-bold text-indigo-950 shadow-lg shadow-amber-400/20 transition-all duration-200 hover:from-amber-200 hover:to-orange-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/40 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign in
+                  <ArrowRight
+                    size={18}
+                    className="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                  />
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-center text-sm text-indigo-200">
+          New to Storely?{" "}
+          <Link
+            to="/signup"
+            className="font-semibold text-amber-300 transition-colors hover:text-amber-200 hover:underline"
+          >
+            Create an account
+          </Link>
+        </p>
+      </main>
+    </div>
+  );
+}
