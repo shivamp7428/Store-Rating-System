@@ -14,7 +14,7 @@ const { pool } = await import("../config/db.js");
 
 const resetPassword = async () => {
     try {
-        const password = "Shivam@123";
+        const password = "Store@123";
 
         const passwordHash = await bcrypt.hash(password, 10);
 
@@ -24,7 +24,7 @@ const resetPassword = async () => {
             SET password_hash = ?
             WHERE email = ?
             `,
-            [passwordHash, "shivam123@gmail.com"]
+            [passwordHash, "kabir.sharma06@example.com"]
         );
 
         if (result.affectedRows === 0) {
@@ -33,8 +33,8 @@ const resetPassword = async () => {
         }
 
         console.log("Password reset successfully");
-        console.log("Email: shivam123@gmail.com");
-        console.log("Password: Shivam@123");
+        console.log("Email: kabir.sharma06@example.com");
+        console.log("Password: Store@123");
 
     } catch (error) {
         console.error(error.message);

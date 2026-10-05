@@ -3,7 +3,7 @@ import { pool } from "../config/db.js";
 
 const resetPassword = async () => {
     try {
-        const passwordHash = await bcrypt.hash("Admin@123", 10);
+        const passwordHash = await bcrypt.hash("Store@123", 10);
 
         const [result] = await pool.execute(
             `
@@ -12,7 +12,7 @@ const resetPassword = async () => {
             WHERE email = ?
               AND role = 'ADMIN'
             `,
-            [passwordHash, "admin@store.com"]
+            [passwordHash, "aarav.sharma01@example.com"]
         );
 
         if (result.affectedRows === 0) {
@@ -21,8 +21,8 @@ const resetPassword = async () => {
         }
 
         console.log("Admin password reset successfully");
-        console.log("Email: admin@store.com");
-        console.log("Password: Admin@123");
+        console.log("Email: aarav.sharma01@example.com");
+        console.log("Password: Store@123");
 
     } catch (error) {
         console.error(error);

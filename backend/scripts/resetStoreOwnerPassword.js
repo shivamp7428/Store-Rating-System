@@ -3,29 +3,37 @@ import { pool } from "../config/db.js";
 
 const resetPassword = async () => {
     try {
-        const passwordHash = await bcrypt.hash(
-            "Owner@123",
-            10
+        const email = "rahul.owner75@example.com";
+        const passwordHash = await bcrypt.hash("Store@123", 10);
+
+        const [users] = await pool.execute(
+            `
+            SELECT id, email, role
+            FROM users
+            WHERE email = ?
+              AND role = 'STORE_OWNER'
+            `,
+            [email]
         );
 
-        const [result] = await pool.execute(
+        if (users.length === 0) {
+            console.log("Store owner not found");
+            return;
+        }
+
+        await pool.execute(
             `
             UPDATE users
             SET password_hash = ?
             WHERE email = ?
               AND role = 'STORE_OWNER'
             `,
-            [passwordHash, "owner@store.com"]
+            [passwordHash, email]
         );
 
-        if (result.affectedRows === 0) {
-            console.log("Store owner not found");
-            return;
-        }
-
         console.log("Store owner password reset successfully");
-        console.log("Email: owner@store.com");
-        console.log("Password: Owner@123");
+        console.log("Email:", email);
+        console.log("Password: Store@123");
 
     } catch (error) {
         console.error(error);
